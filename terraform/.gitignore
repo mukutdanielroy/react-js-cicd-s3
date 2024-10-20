@@ -1,0 +1,27 @@
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+
+# Local .terraform directory
+.terraform/
+
+# Terraform CLI configuration file
+.terraform.rc
+terraform.rc
+
+# Backup files
+*.backup
+*.tfstate.backup
+
+# IDE specific files
+*.swp
+*.swo
+*.DS_Store
+
+# Ignore any sensitive files
+*.pem
+*.key
+*.crt
