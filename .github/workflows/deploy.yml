@@ -37,7 +37,7 @@ jobs:
 
     - name: Sync to S3
       run: |
-        aws s3 sync frontend/build s3://$S3_BUCKET_NAME --delete --acl public-read
+        aws s3 sync frontend/build s3://$S3_BUCKET_NAME --delete
 
       env:
         S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
