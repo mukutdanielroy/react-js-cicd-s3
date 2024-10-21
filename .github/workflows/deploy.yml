@@ -11,52 +11,36 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
         node-version: '20'
 
-    - name: Check for changes in frontend directory
-      id: check_changes
-      run: |
-        if git rev-parse HEAD^ >/dev/null 2>&1; then
-          git diff --exit-code HEAD^ HEAD -- frontend
-        else
-          echo "No previous commit to compare. Treating as no changes."
-          echo "::set-output name=changes::false"
-          exit 0
-        fi
-      continue-on-error: true  # Continue if there are no changes
-
-    - name: Set changes variable
-      id: set_changes
-      run: echo "::set-output name=changes::$(test $? -eq 0 && echo 'true' || echo 'false')"
-
-    - name: Install dependencies
-      if: steps.set_changes.outputs.changes == 'true'
-      run: |
-        cd frontend
-        npm install
+    - name: Cache Node.js modules
+      uses: actions/cache@v2
+      with:
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
 
     - name: Build the frontend
-      if: steps.set_changes.outputs.changes == 'true'
       run: |
         cd frontend
-        npm run build
+        npm ci && npm run build
 
     - name: Configure AWS credentials
-      if: steps.set_changes.outputs.changes == 'true'
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Sync to S3
-      if: steps.set_changes.outputs.changes == 'true'
       run: |
+        set -e
         aws s3 sync frontend/build s3://$S3_BUCKET_NAME --delete
       env:
         S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
